@@ -36,6 +36,7 @@ test_set = tf.contrib.learn.datasets.base.load_csv(filename=IRIS_TEST, target_dt
 x_train, x_test, y_train, y_test = training_set.data, test_set.data, \
   training_set.target, test_set.target
 pos=0
+#get and print the number of positive examples(parse check)
 for a in y_train:
     if a=='1':
         pos=pos+1
@@ -45,6 +46,7 @@ for a in y_test:
     if a=='1':
         pos=pos+1
 print(pos)
+#initializing relevant variables(ba=number of loops per avg f1, all else self explanatory)
 avgauc=0
 avgf1=0
 ba=20
@@ -52,18 +54,21 @@ optimizerarraystart=[20, 20, 20]
 optimizerarraycurrent=[20, 20, 20];
 maxoptimizerarray=optimizerarraystart;
 maxavgf1=0
-# Build 3 layer DNN with current array of layers and nodes, set <x to 6 on server.
+# Build multilayer DNN with current array of layers and nodes, set <x to 6 on server.
 while len(optimizerarraycurrent)<6:
     for i in range(ba):
+        #create model
         classifier = tf.contrib.learn.DNNClassifier(hidden_units=optimizerarraycurrent, n_classes=2)
    
 
         # Fit model.
         classifier.fit(x=x_train, y=y_train, steps=1000)
         y = classifier.predict(x_test)
+        # Evaluate accuracy, first by printing predicted and actual labelings for the test set and then by calculating f1
         print(count_nonzero(y))
         print (str(y))
         print(y_test)
+        #actually getting the f1 score
         tp=float(0.0)
         tn=float(0.0)
         fn=float(0.0)
@@ -77,7 +82,7 @@ while len(optimizerarraycurrent)<6:
                 fn+=1
             if y_test[c]=='0' and y[c]==0:
                 tn+=1
-        # Evaluate accuracy.
+        
         if tp+fp==0 or tp+fn==0:
             precision=0
             recall=0
@@ -87,21 +92,26 @@ while len(optimizerarraycurrent)<6:
             recall=tp/(tp+fn)
             f1=2*(precision*recall)/(precision+recall)
         avgf1+=f1
+        #here the program calculates auc
         accuracy_score = classifier.evaluate(x=x_test, y=y_test)['eval_auc']
         avgauc+=accuracy_score
         print("Accuracy: "+str(accuracy_score))
         print("F1: "+str(f1))
         print("Precision : " + str(precision))
         print("Recall : " + str(recall))
+    #at this point the program calculates the average f1 and auc for this setup of layers and nodes
     avgauc=avgauc/ba
     avgf1=avgf1/ba
     print(metrics);
     print("Average auc: "+ str(avgauc))
     print("Average f1: "+str(avgf1))
+    #here's the maximization code
     if avgf1>maxavgf1:
         maxoptimizerarray=optimizerarraycurrent
         maxavgf1=avgf1
-        #change these values as needed(20, 50, 15) are suggested for last 3 params
+    #change these values as needed(20, 50, 15) are suggested for last 3 params
+    #here we get the lexicographically next setup of nodes and layers
     optimizerarraycurrent=testincrements(optimizerarraycurrent, 20, 50, 15) 
+#after the program has tested every setup of nodes and layers given it's starting params, we print out the best setup and its average f1
 print(str(maxoptimizerarray))
 print(str(maxavgf1))

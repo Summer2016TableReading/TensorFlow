@@ -4,7 +4,7 @@ import numpy as np
 from numpy import count_nonzero
 from tensorflow.contrib.metrics.python import metrics
 
-# Data sets
+#Data sets
 #returns False if the index is outside the array bounds or if the array value at that index isn’t searchterm
 def arraysearch(a, searchterm, sindex):
     if sindex>=len(a):
